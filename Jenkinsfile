@@ -17,13 +17,13 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh '''
+                sh """
                   docker run --rm \
-                    -v "$PWD:/app" \
+                    -v "\$PWD:/app" \
                     -w /app \
                     python:3.11-slim \
                     sh -c "pip install -r requirements.txt && pytest"
-                '''
+                """
             }
         }
 
@@ -60,10 +60,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Tests passed, app deployed'
+            echo '✅ Tests passed, image built, pushed, and app deployed'
         }
         failure {
-            echo '❌ Tests failed, deployment stopped'
+            echo '❌ Pipeline failed – check logs'
         }
     }
 }
