@@ -15,7 +15,19 @@ pipeline {
             }
         }
 
-        stage('Docker Build (includes tests)') {
+        stage('Test') {
+            steps {
+                sh '''
+                  docker run --rm \
+                    -v "$PWD:/app" \
+                    -w /app \
+                    python:3.11-slim \
+                    sh -c "pip install -r requirements.txt && pytest"
+                '''
+            }
+        }
+
+        stage('Docker Build') {
             steps {
                 sh '''
                   docker build -t $IMAGE_NAME:$IMAGE_TAG .
@@ -48,10 +60,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Full CI/CD pipeline completed successfully'
+            echo '✅ Tests passed, app deployed'
         }
         failure {
-            echo '❌ Pipeline failed'
+            echo '❌ Tests failed, deployment stopped'
         }
     }
 }
