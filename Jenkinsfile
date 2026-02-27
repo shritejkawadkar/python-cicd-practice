@@ -15,26 +15,7 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh '''
-                  python3 -m venv venv
-                  . venv/bin/activate
-                  pip install -r requirements.txt
-                '''
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh '''
-                  . venv/bin/activate
-                  pytest
-                '''
-            }
-        }
-
-        stage('Docker Build') {
+        stage('Docker Build (includes tests)') {
             steps {
                 sh '''
                   docker build -t $IMAGE_NAME:$IMAGE_TAG .
@@ -67,10 +48,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ CI/CD pipeline completed successfully'
+            echo '✅ Full CI/CD pipeline completed successfully'
         }
         failure {
-            echo '❌ Pipeline failed – check logs'
+            echo '❌ Pipeline failed'
         }
     }
 }
