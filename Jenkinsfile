@@ -9,6 +9,20 @@ pipeline {
 
     stages {
 
+        stage('Debug Workspace') {
+            steps {
+                sh '''
+                  echo "====== DEBUG WORKSPACE ======"
+                  echo "WORKSPACE is: $WORKSPACE"
+                  echo "Current directory:"
+                  pwd
+                  echo "Listing WORKSPACE contents:"
+                  ls -la "$WORKSPACE"
+                  echo "============================="
+                '''
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -22,7 +36,7 @@ pipeline {
                     -v "${WORKSPACE}:/app" \
                     -w /app \
                     python:3.11-slim \
-                    sh -c "pip install -r requirements.txt && pytest"
+                    sh -c "echo 'Inside container:' && pwd && ls -la && pip install -r requirements.txt && pytest"
                 """
             }
         }
@@ -60,7 +74,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Tests passed, image built, pushed, and app deployed'
+            echo '✅ Pipeline completed successfully'
         }
         failure {
             echo '❌ Pipeline failed – check logs'
