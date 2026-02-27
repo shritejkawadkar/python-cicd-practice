@@ -9,20 +9,6 @@ pipeline {
 
     stages {
 
-        stage('Debug Workspace') {
-            steps {
-                sh '''
-                  echo "====== DEBUG WORKSPACE ======"
-                  echo "WORKSPACE is: $WORKSPACE"
-                  echo "Current directory:"
-                  pwd
-                  echo "Listing WORKSPACE contents:"
-                  ls -la "$WORKSPACE"
-                  echo "============================="
-                '''
-            }
-        }
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -33,19 +19,17 @@ pipeline {
             steps {
                 sh """
                   docker run --rm \
-                    -v "${WORKSPACE}:/app" \
+                    -v "\${WORKSPACE}:/app" \
                     -w /app \
                     python:3.11-slim \
-                    sh -c "echo 'Inside container:' && pwd && ls -la && pip install -r requirements.txt && pytest"
+                    sh -c "pip install -r requirements.txt && pytest"
                 """
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh '''
-                  docker build -t $IMAGE_NAME:$IMAGE_TAG .
-                '''
+                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
             }
         }
 
@@ -69,15 +53,6 @@ pipeline {
                     $IMAGE_NAME:$IMAGE_TAG
                 '''
             }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Pipeline completed successfully'
-        }
-        failure {
-            echo '❌ Pipeline failed – check logs'
         }
     }
 }
