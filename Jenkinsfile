@@ -13,7 +13,7 @@ pipeline {
             steps {
                 sh '''
                   docker run --rm \
-                    -v "${WORKSPACE}:/app" \
+                    -v "$WORKSPACE:/app" \
                     -w /app \
                     python:3.11-slim \
                     sh -c "pip install -r requirements.txt && pytest"
@@ -23,7 +23,9 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                sh '''
+                  docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                '''
             }
         }
 
