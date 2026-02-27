@@ -1,29 +1,53 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME   = "shritej14/python-cicd-app"
+        IMAGE_TAG    = "latest"
+        DOCKER_CREDS = credentials('dockerhub-creds')
+    }
+
     stages {
 
-        stage('PROVE WHAT CONTAINER SEES') {
+        stage('Test') {
+            agent {
+                docker {
+                    image 'python:3.11-slim'
+                    reuseNode true
+                }
+            }
             steps {
                 sh '''
-                  echo "===== HOST SIDE ====="
-                  pwd
-                  ls -la
-                  echo "====================="
+                  pip install -r requirements.txt
+                  pytest
+                '''
+            }
+        }
 
-                  docker run --rm \
-                    -v "$WORKSPACE:/app" \
-                    python:3.11-slim \
-                    sh -c "
-                      echo '===== INSIDE CONTAINER =====';
-                      pwd;
-                      ls -la /;
-                      echo '--- /app contents ---';
-                      ls -la /app || true;
-                      echo '--- cat requirements.txt ---';
-                      cat /app/requirements.txt || echo 'FILE NOT FOUND';
-                      echo '============================'
-                    "
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                sh '''
+                  echo "$DOCKER_CREDS_PSW" | docker login -u "$DOCKER_CREDS_USR" --password-stdin
+                  docker push $IMAGE_NAME:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                  docker rm -f python-app || true
+                  docker pull $IMAGE_NAME:$IMAGE_TAG
+                  docker run -d \
+                    --name python-app \
+                    -p 8081:5000 \
+                    $IMAGE_NAME:$IMAGE_TAG
                 '''
             }
         }
