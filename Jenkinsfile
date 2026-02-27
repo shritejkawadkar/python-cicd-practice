@@ -19,7 +19,7 @@ pipeline {
             steps {
                 sh """
                   docker run --rm \
-                    -v "\$PWD:/app" \
+                    -v "${WORKSPACE}:/app" \
                     -w /app \
                     python:3.11-slim \
                     sh -c "pip install -r requirements.txt && pytest"
