@@ -9,6 +9,9 @@ pipeline {
 
     stages {
 
+        /* =====================
+           CI: Run Tests
+           ===================== */
         stage('Test') {
             agent {
                 docker {
@@ -18,18 +21,29 @@ pipeline {
             }
             steps {
                 sh '''
+                  python -m venv venv
+                  . venv/bin/activate
+                  pip install --upgrade pip
                   pip install -r requirements.txt
                   pytest
                 '''
             }
         }
 
+        /* =====================
+           Build Docker Image
+           ===================== */
         stage('Docker Build') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                sh '''
+                  docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                '''
             }
         }
 
+        /* =====================
+           Push Image to Docker Hub
+           ===================== */
         stage('Docker Push') {
             steps {
                 sh '''
@@ -39,6 +53,9 @@ pipeline {
             }
         }
 
+        /* =====================
+           Deploy Application
+           ===================== */
         stage('Deploy') {
             steps {
                 sh '''
@@ -50,6 +67,15 @@ pipeline {
                     $IMAGE_NAME:$IMAGE_TAG
                 '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ CI/CD pipeline completed successfully'
+        }
+        failure {
+            echo '❌ Pipeline failed'
         }
     }
 }
